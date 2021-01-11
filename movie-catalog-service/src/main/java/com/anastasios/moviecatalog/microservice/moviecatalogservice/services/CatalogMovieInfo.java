@@ -4,14 +4,11 @@ import com.anastasios.moviecatalog.microservice.moviecatalogservice.models.Catal
 import com.anastasios.moviecatalog.microservice.moviecatalogservice.models.Movie;
 import com.anastasios.moviecatalog.microservice.moviecatalogservice.models.Rating;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 public class CatalogMovieInfo {
@@ -22,7 +19,12 @@ public class CatalogMovieInfo {
     @Autowired
     private RestTemplate restTemplate;
 
-    @HystrixCommand(fallbackMethod = "getFallbackCatalogItem")
+    @HystrixCommand(fallbackMethod = "getFallbackCatalogItem",
+            threadPoolKey = "movieInfoPool",
+            threadPoolProperties = {
+                    @HystrixProperty(name = "coreSize", value = "20"),
+                    @HystrixProperty(name = "maxQueueSize", value = "10")
+            })
     public CatalogItem getCatalogItem(Rating rating) {
         //This uses WebClientBuilder(asynchronous) instead of RestTemplate to make the API calls
         //Movie movie = webClientBuilder.build()

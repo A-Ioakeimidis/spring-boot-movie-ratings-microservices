@@ -3,6 +3,7 @@ package com.anastasios.moviecatalog.microservice.moviecatalogservice.services;
 import com.anastasios.moviecatalog.microservice.moviecatalogservice.models.Rating;
 import com.anastasios.moviecatalog.microservice.moviecatalogservice.models.UserRating;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,13 @@ public class UserRatingsInfo {
     @Autowired
     private RestTemplate restTemplate;
 
-    @HystrixCommand(fallbackMethod = "getFallbackUserRating")
+    @HystrixCommand(fallbackMethod = "getFallbackUserRating",
+            commandProperties = {
+                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
+                    @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
+                    @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
+                    @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000")
+            })
     public UserRating getUserRating(int userId) {
         return restTemplate.getForObject(ratingsDataServiceUserUrl + userId, UserRating.class);
     }
